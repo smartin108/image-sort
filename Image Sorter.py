@@ -27,17 +27,19 @@ Change Log:
         *   invoke it from Windows Explorer as a folder action!
     *   clearer progress feedback
     *   now puts files with EXIF read errors in a Default Location instead of skipping them
+2024 02 10 AH
+    *   Source now managed in Git repo
+    *   Added JSONDb automated file tracking, fulfilling this feature request:
+        *   Automatically read requested storage device and figure out what needs to be offloaded to 
+            source_root. Journal the devices & files copied so you know where to ontinue on next run.
+            Bonus round: log each file type the camera is capable of separately, e.g., JPG and 
+            whever video formats it supports.
 
 
 Bugs & Feature Reqs:
 
     *   Designate a folder in source_root that will be ignored. So that you can dump processed files 
             here before offloading them to permanent storage.
-    *   Automatically read requested storage device and figure out what needs to be offloaded to 
-        source_root. Journal the devices & files copied so you know where to ontinue on next run.
-        Bonus round: log each file type the camera is capable of separately, e.g., JPG and 
-        whever video formats it supports.
-
 
 
 """
@@ -47,6 +49,7 @@ import exifread
 import datetime
 import shutil
 from sys import exit
+from sys import stdout
 import sys
 from time import sleep
 from pprint import pprint
@@ -69,7 +72,7 @@ def sleep_with_feedback(message='', sleep_time:float=5.0, trailing_spaces:int=5)
         print('\n')
     return 1
 
-db = JSONDb(f='test1.json')
+db = JSONDb(f='db.json', reset=1)
 db.find_folders()
 
 
@@ -116,7 +119,8 @@ for dirpath, dirnames, filenames in os.walk(source_root):
     my_count_length = len(str(my_count))
     for filename in filenames:
         file_metadata = {}
-        print(f'reading {my_count:>7} / {file_count} : {dirpath}/{filename}  ({get_file_extension(filename)})')
+        print(f'\rreading {my_count:>7} / {file_count} : {dirpath}/{filename}  ({get_file_extension(filename)}){" "*10}', end='')
+        stdout.flush()
         source_rel_path = f'{dirpath}\\{filename}'
         file_extension = get_file_extension(source_rel_path)
         if file_extension in ['jpg','jpeg','heic','rw2']:
@@ -139,12 +143,13 @@ for dirpath, dirnames, filenames in os.walk(source_root):
                 file_metadata['raw'] = False
 
             image_exif_dict[source_rel_path] = file_metadata
-        elif file_extension in ['mp4','mpg','mpeg','avi','xmov']:
+        elif file_extension in ['mp4','mpg','mpeg','avi','xmov', 'mts']:
             # handle video metadata (not supported yet)
             skipped.append(source_rel_path)
         else:
             skipped.append(source_rel_path)
         my_count += 1
+    print('\n')
 
 print(f'\n\ndiscovered {len(image_exif_dict)} files with EXIF data')
 
@@ -180,7 +185,8 @@ for (source_rel_path, file_metadata) in image_exif_dict.items():
     
     try:
         target_path = target_folder+file_metadata['filename']
-        print(f'attempting to move {source_rel_path:>81} --> {target_path}')
+        print(f'attempting to move {source_rel_path:>81} --> {target_path}{" "*80}', end='')
+        stdout.flush()
         shutil.move(source_rel_path, target_path)
     except PermissionError:
         print(f'{source_rel_path} <-- PermissionError ignored during processing. A copy of this file might be in the target folder {target_folder}')
