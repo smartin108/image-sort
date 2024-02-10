@@ -85,7 +85,7 @@ def shorten(message, char_count):
 print('*** Image Sorter ***\n\n')
 
 db = JSONDb(f='db.json', reset=1)
-db.find_folders()
+db.find_folders()   # actually copies files
 
 image_exif_dict = {}
 try:
@@ -102,7 +102,6 @@ if requested_root:
 else:
     source_root =  r'H:/Camera Rips'
 target_root =  source_root
-skipped = []
 print(f'source_root resolves as {source_root}')
 sleep_with_feedback(r'continuing in % seconds', 2)
 
@@ -125,6 +124,7 @@ def make_short_date(long_date):
 
 
 # loop through files and read 'em
+skipped = []
 for dirpath, dirnames, filenames in os.walk(source_root):
     file_count = len(filenames)
     my_count = 0
