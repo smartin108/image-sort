@@ -1,5 +1,5 @@
 """
-This script will examine EXIF data of JPG files in the current directory, 
+This script will examine EXIF data of JPG files in the current directory,
 create a folder for each unique Image DateTime, and move the image to that folder.
 
 For now it's janky: Copy your pictures to ./source and run the script. Processed
@@ -30,10 +30,10 @@ Change Log:
 2024 02 10 AH
     *   Source now managed in Git repo
     *   Added JSONDb automated file tracking, fulfilling this feature request:
-        *   Automatically read requested storage device and figure out what needs to be offloaded to 
+        *   Automatically read requested storage device and figure out what needs to be offloaded to
             source_root. Journal the devices & files copied so you know where to ontinue on next run.
-            Bonus round: log each file type the camera is capable of separately, e.g., JPG and 
-            whever video formats it supports.
+            Bonus round: log each file type the camera is capable of separately, e.g., JPG and
+            whatever video formats it supports.
 
 
 Bugs & Feature Reqs:
@@ -59,6 +59,7 @@ from JSONDb import JSONDb
 target_exif_tags = ['xImage DateTime', 'Image Make', 'Image Model', 'EXIF DateTimeOriginal']
 
 def sleep_with_feedback(message='', sleep_time:float=5.0, trailing_spaces:int=5):
+    """display a countdown timer while sleeping"""
     if sleep_time < 0.5:
         sleep(sleep_time)
     else:
@@ -72,9 +73,19 @@ def sleep_with_feedback(message='', sleep_time:float=5.0, trailing_spaces:int=5)
         print('\n')
     return 1
 
+
+def shorten(message, char_count):
+    """shrink a long name so it fits on the screen"""
+    if len(message) > char_count:
+        return message[:char_count//2-4] + ' ... ' + message[-char_count//2+4:]
+    else:
+        return message
+
+
+print('*** Image Sorter ***\n\n')
+
 db = JSONDb(f='db.json', reset=1)
 db.find_folders()
-
 
 image_exif_dict = {}
 try:
@@ -119,7 +130,9 @@ for dirpath, dirnames, filenames in os.walk(source_root):
     my_count_length = len(str(my_count))
     for filename in filenames:
         file_metadata = {}
-        print(f'\rreading {my_count:>7} / {file_count} : {dirpath}/{filename}  ({get_file_extension(filename)}){" "*10}', end='')
+        ticker = f'\rreading {my_count}/{file_count}: '
+        status_message = f'{ticker}{shorten(dirpath+filename,100-len(ticker))} ({get_file_extension(filename)})'
+        print(f'{status_message}{" "*(119-len(status_message))}', end='')
         stdout.flush()
         source_rel_path = f'{dirpath}\\{filename}'
         file_extension = get_file_extension(source_rel_path)
@@ -149,13 +162,14 @@ for dirpath, dirnames, filenames in os.walk(source_root):
         else:
             skipped.append(source_rel_path)
         my_count += 1
-    print('\n')
+print('\n')
 
 print(f'\n\ndiscovered {len(image_exif_dict)} files with EXIF data')
 
-
 print(f'\n\nreorganizing files...\n')
+i = 0
 for (source_rel_path, file_metadata) in image_exif_dict.items():
+    i += 1
     try:
         folder_date = make_short_date(file_metadata['EXIF DateTimeOriginal'])
     except KeyError as e:
@@ -185,15 +199,19 @@ for (source_rel_path, file_metadata) in image_exif_dict.items():
     
     try:
         target_path = target_folder+file_metadata['filename']
-        print(f'attempting to move {source_rel_path:>81} --> {target_path}{" "*80}', end='')
+        status_message = f'\rmoving {i}/{len(image_exif_dict.items())}: {shorten(source_rel_path, 80)}'
+        print(f'{status_message}{" "*(119-len(status_message))}', end='')
         stdout.flush()
         shutil.move(source_rel_path, target_path)
     except PermissionError:
-        print(f'{source_rel_path} <-- PermissionError ignored during processing. A copy of this file might be in the target folder {target_folder}')
+        print(f'\n\n>>>  {source_rel_path} <-- PermissionError ignored during processing. A copy of this file might be in the target folder {target_folder}')
     except shutil.SameFileError: 
-        print(f'{source_rel_path} <-- SameFileError ignored during processing. A copy of this file might be in the target folder {target_folder}')
+        print(f'\n\n>>>  {source_rel_path} <-- SameFileError ignored during processing. A copy of this file might be in the target folder {target_folder}')
 
-print('cleaning up source folders...')
+
+print('\n')
+sleep_with_feedback('cleaning up source folders in %', 3)
+# print('cleaning up source folders...')
 for dirpath, dirnames, filenames in os.walk(source_root, topdown=False):
     try:
         thumb = f'{dirpath}\\Thumbs.db'
@@ -213,5 +231,7 @@ except PermissionError:
 
 if requested_root:
     print('\n\ndone. you can safely close this window')
+    sleep_with_feedback(r'this window will close automatically in % seconds',1000)
+else:
     sleep_with_feedback(r'this window will close automatically in % seconds',1000)
 print('\n\ndone.')

@@ -4,6 +4,7 @@
 import os
 import json
 from sys import exit
+from sys import stdout
 import re
 from shutil import copyfile
 from collections import namedtuple
@@ -16,11 +17,9 @@ class JSONDb:
 
     def __init__(self, **arg):
 
-        # print(f'JSONDb called with **arg: {arg}')
-
         # storage_device :: Device ID where the removeable media is expected
-        self.storage_device = r'F:'
-        # self.storage_device = r'V:'
+        # self.storage_device = r'F:'
+        self.storage_device = r'V:'
 
         # id_location :: file name where the camera's name is expected to be found
         #       this is always in the root folder of storage_device
@@ -105,13 +104,11 @@ class JSONDb:
                 self.reset = True
 
         # args obtained, now finish setting up
-        # print(f'self.d :\n    {self.d}')
         self.setup()
 
 
     def read_camera_id(self):
         """ read the camera id from the file where we expect it to be """
-        # print('read_camera_id')
         fqpn = f'{self.storage_device}{self.id_location}'
         try:
             with open(fqpn, 'r') as f:
@@ -129,7 +126,6 @@ class JSONDb:
             * get the filename of the transfer tracking file
             * decide whether any passed dictionary should be used
         """
-        # print('setup')
         self.camera_id = self.read_camera_id()
         if self.filename:
             file_exists = self.open_file()
@@ -143,12 +139,10 @@ class JSONDb:
             if not adopted:
                 # bad dict or none found in the file
                 print(f'Ignoring dictionary in parameter (not a valid dictionary)')
-                # print(f'Ignoring dictionary in parameter (not a valid dictionary)\n    {self.d_untested}')
 
 
     def write_file(self):
         """ [re]create a file using the dictionary onboard self """
-        # print(f'write_file({self.filename})')
         try:
             with open(self.filename, 'w') as f:
                 payload = json.dumps(self.d)        # .dumps :: Python obj --> json
@@ -162,7 +156,6 @@ class JSONDb:
 
 
     def open_file(self):
-        # print(f'open_file({self.filename})')
         """determine whether we open existing or create anew"""
         if self.reset:
             self.write_file()
@@ -184,14 +177,12 @@ class JSONDb:
 
     def evaluate(self, data):
         """ evaluate data as a dictionary; if it's good, keep it """
-        # print(f'evaluate')
         try:
             d_tentative = json.loads(data)      # .loads :: json --> Python obj
             result = True
             # having gotten this far, 
             # we accept the data as our new dictionary, replacing the default
             self.d = d_tentative
-            # print(f'data accepted as new dictionary:\n    {data}')
         except json.decoder.JSONDecodeError:
             result = False
         except TypeError:
@@ -207,23 +198,17 @@ class JSONDb:
             extpart = filename.split('.')[-1]
             filepart = filename.split('\\')[-1].split('.')[0]
             result = False, None
-            # print(f'pattern count: {pattern_count}')
             for i in range(pattern_count):
                 last = patterns[i]["Last"]
                 last_ext = last.split('.')[-1]
                 last_file = last.split('.')[0]
-                # print(filepart, last_file, extpart, last_ext)
                 if filepart > last_file and extpart == last_ext:
                     return True, extpart
             return result
 
 
-        # print('find_folders')
-        # print(f'self.d :\n    {self.d}')
-        # print(f'camera_id: {self.camera_id}')
         patterns = {}
         pattern_count = 0
-        # if True:
         try:
             for pattern in self.d[self.camera_id]["Properties"]["Patterns"].values():
                 patterns[pattern_count] = {
@@ -235,21 +220,16 @@ class JSONDb:
             print(f'>>> :( unhandled exception :(\n>>> {e}')
             raise
             exit()
-        # print(f'patterns : {patterns}')
 
         dest_path = self.d[self.camera_id]["Properties"]["Target"]
         files_to_copy = []
         file_types = set()
         total_bytes = 0
         for p, d, f in os.walk(self.storage_device):
-            # print(p,d,f)
             for file_name in f:
-                # print(f'checking {file_name}')
                 candidate_file = os.path.join(p, file_name)
                 for i in range(pattern_count):
-                    # print(f'checking pattern {patterns[i]["Path"]} in {candidate_file}')
                     if re.search(patterns[i]["Path"], candidate_file):
-                        # print('... pattern matched')
                         copy_this, extension = check_file(candidate_file)
                         file_types.add(extension)
                         if copy_this:
@@ -266,18 +246,15 @@ class JSONDb:
             for file in files_to_copy:
                 copyfile(file.source, file.dest)
                 bytes_moved += file.file_size
-                print(f'copying files... ({(100*bytes_moved)//total_bytes}%)')
+                print(f'\rcopying files... ({(100*bytes_moved)//total_bytes}%)', end='')
+                stdout.flush()
+            print('\n')
 
-            # print(file_types)
-            # print('last files copied:')
             for extension in file_types:
                 if extension:
                     filtered = [f for f in files_to_copy if f.extension == extension]
                     last = sorted(filtered, key=lambda f: f.file_name, reverse=True)[0]
-                    print(last)
                     self.d[self.camera_id]['Properties']['Patterns'][extension]['Last'] = last.file_name
             self.write_file()
         else:
             print('no files to copy')
-        # print(f'self.d :\n    {self.d}')
-
