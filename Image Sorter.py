@@ -51,6 +51,7 @@ import sys
 from time import sleep
 from pprint import pprint
 from math import floor
+from JSONDb import JSONDb
 
 target_exif_tags = ['xImage DateTime', 'Image Make', 'Image Model', 'EXIF DateTimeOriginal']
 
@@ -67,6 +68,10 @@ def sleep_with_feedback(message='', sleep_time:float=5.0, trailing_spaces:int=5)
             countdown -= 1
         print('\n')
     return 1
+
+db = JSONDb(f='test1.json')
+db.find_folders()
+
 
 image_exif_dict = {}
 try:
