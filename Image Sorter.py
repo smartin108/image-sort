@@ -64,12 +64,12 @@ def sleep_with_feedback(message='', sleep_time:float=5.0, trailing_spaces:int=5)
         sleep(sleep_time)
     else:
         countdown = floor(sleep_time)
-        while countdown > 0:
+        while countdown > -1e-10:
             regular_message = message.replace('%', str(int(countdown)))
             sys.stdout.write(f'\r{regular_message}{" "*trailing_spaces}')
             sys.stdout.flush()
-            sleep(1)
-            countdown -= 1
+            sleep(0.1)
+            countdown -= 0.1
         print('\n')
     return 1
 
@@ -95,7 +95,7 @@ except IndexError as e:
 
 if requested_root:
     source_root = requested_root
-    accept_default = input(f'Continue with {requested_root} ? (default:no) ')
+    accept_default = input(f'Continue with {requested_root} ? (y/Y/1 to accept, any other to abort) ')
     if not accept_default.lower() in ['y','1']:
         sleep_with_feedback(r'halting in % seconds',5)
         exit()
@@ -110,7 +110,7 @@ sleep_with_feedback(r'continuing in % seconds', 2)
 # Plant a dummy file in the source folder. 
 # This intentionally has .jpg extension but no EXIF data. An error is thrown later, which we can handle gracefully.
 # This seems to make the PermissionError go away. #KLUDGE
-dummy_filename = 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzlol.jpg' 
+dummy_filename = '___ImageSorterTempFile___.jpg' 
 with open(source_root+dummy_filename, 'w') as f:
     f.write('made you look!')
 
@@ -124,6 +124,7 @@ def make_short_date(long_date):
     return f'{std_date.year}-{std_date.month:02}-{std_date.day:02}'
 
 
+# loop through files and read 'em
 for dirpath, dirnames, filenames in os.walk(source_root):
     file_count = len(filenames)
     my_count = 0
@@ -162,7 +163,6 @@ for dirpath, dirnames, filenames in os.walk(source_root):
         else:
             skipped.append(source_rel_path)
         my_count += 1
-print('\n')
 
 print(f'\n\ndiscovered {len(image_exif_dict)} files with EXIF data')
 
@@ -228,10 +228,12 @@ try:
 except PermissionError:
     print('could not remove dummy file')
 
+print('EOJ')
 
 if requested_root:
     print('\n\ndone. you can safely close this window')
     sleep_with_feedback(r'this window will close automatically in % seconds',1000)
 else:
+    print('\n')
     sleep_with_feedback(r'this window will close automatically in % seconds',1000)
-print('\n\ndone.')
+# print('\n\ndone.')
