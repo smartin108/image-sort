@@ -18,8 +18,8 @@ class JSONDb:
     def __init__(self, **arg):
 
         # storage_device :: Device ID where the removeable media is expected
-        # self.storage_device = r'F:'
-        self.storage_device = r'V:'
+        self.storage_device = r'F:'
+        # self.storage_device = r'V:'
 
         # id_location :: file name where the camera's name is expected to be found
         #       this is always in the root folder of storage_device
@@ -118,7 +118,7 @@ class JSONDb:
                         return line
         except PermissionError as e:
             print(f'\nI got PermissionError:\n  i:    {e}\n\n  >:    Is the card inserted?\n  >:    Is it inserted into the correct drive?\n')
-            exit()
+            raise
 
 
     def setup(self):

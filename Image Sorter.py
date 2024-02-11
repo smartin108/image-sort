@@ -84,8 +84,12 @@ def shorten(message, char_count):
 
 print('*** Image Sorter ***\n\n')
 
-db = JSONDb(f='db.json', reset=1)
-db.find_folders()   # actually copies files
+try:
+    db = JSONDb(f='db.json', reset=1)
+    db.find_folders()   # actually copies files
+except PermissionError:
+    sleep_with_feedback('Continuing in %', 5)
+
 
 image_exif_dict = {}
 try:
@@ -103,7 +107,7 @@ else:
     source_root =  r'H:/Camera Rips'
 target_root =  source_root
 print(f'source_root resolves as {source_root}')
-sleep_with_feedback(r'continuing in % seconds', 2)
+# sleep_with_feedback(r'continuing in % seconds', 2)
 
 
 # Plant a dummy file in the source folder. 
@@ -126,43 +130,44 @@ def make_short_date(long_date):
 # loop through files and read 'em
 skipped = []
 for dirpath, dirnames, filenames in os.walk(source_root):
-    file_count = len(filenames)
-    my_count = 0
-    my_count_length = len(str(my_count))
-    for filename in filenames:
-        file_metadata = {}
-        ticker = f'\rreading {my_count}/{file_count}: '
-        status_message = f'{ticker}{shorten(dirpath+filename,100-len(ticker))} ({get_file_extension(filename)})'
-        print(f'{status_message}{" "*(119-len(status_message))}', end='')
-        stdout.flush()
-        source_rel_path = f'{dirpath}\\{filename}'
-        file_extension = get_file_extension(source_rel_path)
-        if file_extension in ['jpg','jpeg','heic','rw2']:
-            exif_tags = open(source_rel_path, 'rb')
-            tags = exifread.process_file(exif_tags)
-            exif_array = []
+    if dirnames not in ('.Ignore'):
+        file_count = len(filenames)
+        my_count = 0
+        my_count_length = len(str(my_count))
+        for filename in filenames:
+            file_metadata = {}
+            ticker = f'\rreading {my_count}/{file_count}: '
+            status_message = f'{ticker}{shorten(dirpath+filename,100-len(ticker))} ({get_file_extension(filename)})'
+            print(f'{status_message}{" "*(119-len(status_message))}', end='')
+            stdout.flush()
+            source_rel_path = f'{dirpath}\\{filename}'
+            file_extension = get_file_extension(source_rel_path)
+            if file_extension in ['jpg','jpeg','heic','rw2']:
+                exif_tags = open(source_rel_path, 'rb')
+                tags = exifread.process_file(exif_tags)
+                exif_array = []
 
-            for i in tags:
-                compile = i, str(tags[i])
-                exif_array.append(compile)
+                for i in tags:
+                    compile = i, str(tags[i])
+                    exif_array.append(compile)
 
-            file_metadata['filename'] = filename
-            for properties in exif_array:
-                if properties[0] in target_exif_tags:
-                    file_metadata[properties[0]] = properties[1]
+                file_metadata['filename'] = filename
+                for properties in exif_array:
+                    if properties[0] in target_exif_tags:
+                        file_metadata[properties[0]] = properties[1]
 
-            if file_extension in ['rw2']:
-                file_metadata['raw'] = True
+                if file_extension in ['rw2']:
+                    file_metadata['raw'] = True
+                else:
+                    file_metadata['raw'] = False
+
+                image_exif_dict[source_rel_path] = file_metadata
+            elif file_extension in ['mp4','mpg','mpeg','avi','xmov', 'mts']:
+                # handle video metadata (not supported yet)
+                skipped.append(source_rel_path)
             else:
-                file_metadata['raw'] = False
-
-            image_exif_dict[source_rel_path] = file_metadata
-        elif file_extension in ['mp4','mpg','mpeg','avi','xmov', 'mts']:
-            # handle video metadata (not supported yet)
-            skipped.append(source_rel_path)
-        else:
-            skipped.append(source_rel_path)
-        my_count += 1
+                skipped.append(source_rel_path)
+            my_count += 1
 
 print(f'\n\ndiscovered {len(image_exif_dict)} files with EXIF data')
 
@@ -232,8 +237,8 @@ print('EOJ')
 
 if requested_root:
     print('\n\ndone. you can safely close this window')
-    sleep_with_feedback(r'this window will close automatically in % seconds',1000)
 else:
+    sleep_with_feedback(r'this window will close automatically in % seconds',1000)
     print('\n')
     sleep_with_feedback(r'this window will close automatically in % seconds',1000)
 # print('\n\ndone.')
