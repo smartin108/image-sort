@@ -30,9 +30,9 @@ Change Log:
 2024 02 10 AH
     *   Source now managed in Git repo
     *   Added JSONDb automated file tracking, fulfilling this feature request:
-        *   Automatically read requested storage device and figure out what needs to be offloaded to
+        *   Automatically read requested storage device and figure out what needs to be offloaded to 
             source_root. Journal the devices & files copied so you know where to ontinue on next run.
-            Bonus round: log each file type the camera is capable of separately, e.g., JPG and
+            Bonus round: log each file type the camera is capable of separately, e.g., JPG and 
             whatever video formats it supports.
 
 
@@ -130,7 +130,7 @@ def make_short_date(long_date):
 # loop through files and read 'em
 skipped = []
 for dirpath, dirnames, filenames in os.walk(source_root):
-    if dirnames not in ('.Ignore'):
+    if dirnames not in ['.Ignore']:
         file_count = len(filenames)
         my_count = 0
         my_count_length = len(str(my_count))
