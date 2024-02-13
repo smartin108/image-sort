@@ -57,6 +57,7 @@ from math import floor
 from JSONDb import JSONDb
 
 target_exif_tags = ['xImage DateTime', 'Image Make', 'Image Model', 'EXIF DateTimeOriginal']
+default_root = r'H:/Camera Rips'
 
 def sleep_with_feedback(message='', sleep_time:float=5.0, trailing_spaces:int=5):
     """display a countdown timer while sleeping"""
@@ -81,15 +82,7 @@ def shorten(message, char_count):
     else:
         return message
 
-
 print('*** Image Sorter ***\n\n')
-
-try:
-    db = JSONDb(f='db.json', reset=1)
-    db.find_folders()   # actually copies files
-except PermissionError:
-    sleep_with_feedback('Continuing in %', 5)
-
 
 image_exif_dict = {}
 try:
@@ -104,10 +97,14 @@ if requested_root:
         sleep_with_feedback(r'halting in % seconds',5)
         exit()
 else:
-    source_root =  r'H:/Camera Rips'
+    source_root =  default_root
+    try:
+        db = JSONDb(f='db.json', reset=1)
+        db.find_folders()   # actually copies files
+    except PermissionError:
+        sleep_with_feedback('Continuing in %', 5)
 target_root =  source_root
 print(f'source_root resolves as {source_root}')
-# sleep_with_feedback(r'continuing in % seconds', 2)
 
 
 # Plant a dummy file in the source folder. 
@@ -130,7 +127,7 @@ def make_short_date(long_date):
 # loop through files and read 'em
 skipped = []
 for dirpath, dirnames, filenames in os.walk(source_root):
-    if dirnames not in ['.Ignore']:
+    if not '.Ignore' in dirpath:
         file_count = len(filenames)
         my_count = 0
         my_count_length = len(str(my_count))
