@@ -41,6 +41,15 @@ class JSONDb:
         # d_untested :: json object read from file
         self.d_untested = None
 
+        # files_to_copy :: list of filespecs that have been identified to be copied
+        self.files_to_copy = []
+
+        # file_types_to_copy :: set of file extensions that have been identified to be copied
+        self.file_types_to_copy = set()
+
+        # total_bytes_to_copy :: size of files_to_copy
+        self.total_bytes_to_copy = 0
+
         # d :: the working details. also serves as new file defaults
         self.d = {
                     'Panasonic DMC-G85': {
@@ -203,18 +212,37 @@ class JSONDb:
         return result
 
 
-    def find_folders(self):
+    def _find_files(self):
         """ enumerate folders that might have the files we want """
 
         """this method needs to be split up
         the actual file copy task should probably go up to the main application"""
+
+        patterns = {}
+
+        def get_patterns():
+            """enumerate the file name patterns we want"""
+            pattern_count = 0
+            try:
+                for pattern in self.d[self.camera_id]["Properties"]["Patterns"].values():
+                    patterns[pattern_count] = {
+                        "Path": pattern["Path"],
+                        "Last": pattern["Last"]
+                        }
+                    pattern_count += 1
+            except KeyError as e:
+                print(f'>>> :( unhandled exception :(\n>>> {e}')
+                raise
+                exit()
+            return patterns
+
 
         def check_file(filename):
             """ check a specific file to determine whether it should be moved """
             extpart = filename.split('.')[-1]
             filepart = filename.split('\\')[-1].split('.')[0]
             result = False, None
-            for i in range(pattern_count):
+            for i in range(len(patterns)):
                 last = patterns[i]["Last"]
                 last_ext = last.split('.')[-1]
                 last_file = last.split('.')[0]
@@ -223,59 +251,48 @@ class JSONDb:
             return result
 
 
-        patterns = {}
-        pattern_count = 0
-        try:
-            for pattern in self.d[self.camera_id]["Properties"]["Patterns"].values():
-                patterns[pattern_count] = {
-                    "Path": pattern["Path"],
-                    "Last": pattern["Last"]
-                    }
-                pattern_count += 1
-        except KeyError as e:
-            print(f'>>> :( unhandled exception :(\n>>> {e}')
-            raise
-            exit()
-
+        # walk the path, noting any files that need to be copied
         dest_path = self.d[self.camera_id]["Properties"]["Target"]
-        files_to_copy = []
-        file_types = set()
-        total_bytes = 0
-
-        # walk the volume, noting any files that need to be copied
+        patterns = get_patterns()
         for p, d, f in os.walk(self.storage_device):
             for file_name in f:
                 candidate_file = os.path.join(p, file_name)
-                for i in range(pattern_count):
+                for i in range(len(patterns)):
                     if re.search(patterns[i]["Path"], candidate_file):
                         copy_this, extension = check_file(candidate_file)
-                        file_types.add(extension)
+                        self.file_types_to_copy.add(extension)
                         if copy_this:
                             dest = os.path.join(dest_path, file_name)
                             file_size = os.path.getsize(candidate_file)
-                            total_bytes += file_size
-                            files_to_copy.append(file_spec(candidate_file, dest, file_size, file_name, extension))
-                    else:
-                        # print('skipped')
-                        pass
+                            self.total_bytes_to_copy += file_size
+                            self.files_to_copy.append(file_spec(candidate_file, dest, file_size, file_name, extension))
 
-        if files_to_copy:
-            # copy the files
-            print(f'found {len(files_to_copy)} files to copy ({total_bytes} bytes)')
+
+    def _copy_file_worker(self):
+        # copy the files
+        if self.files_to_copy:
+            print(f'found {len(self.files_to_copy)} files to copy ({self.total_bytes_to_copy} bytes)')
             bytes_moved = 0
-            for file in files_to_copy:
+            for file in self.files_to_copy:
                 copyfile(file.source, file.dest)
                 bytes_moved += file.file_size
-                print(f'\rcopying files... ({(100*bytes_moved)//total_bytes}%)', end='')
+                print(f'\rcopying files... ({(100*bytes_moved)//self.total_bytes_to_copy}%)', end='')
                 stdout.flush()
             print('\n')
+            self._update_storage_db()
 
-            # update storage db with last file name per file type
-            for extension in file_types:
-                if extension:
-                    filtered = [f for f in files_to_copy if f.extension == extension]
-                    last = sorted(filtered, key=lambda f: f.file_name, reverse=True)[0]
-                    self.d[self.camera_id]['Properties']['Patterns'][extension]['Last'] = last.file_name
-            self.write_file()
-        else:
-            print('no files to copy')
+
+    def _update_storage_db(self):
+        # update storage db with last file name per file type
+        for extension in self.file_types_to_copy:
+            if extension:
+                filtered = [f for f in self.files_to_copy if f.extension == extension]
+                last = sorted(filtered, key=lambda f: f.file_name, reverse=True)[0]
+                self.d[self.camera_id]['Properties']['Patterns'][extension]['Last'] = last.file_name
+        self.write_file()
+
+
+    def copy_files(self):
+        """friendly interface to find and copy files"""
+        self._find_files()
+        self._copy_file_worker()

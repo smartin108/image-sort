@@ -132,7 +132,7 @@ else:
     source_root =  default_root
     try:
         db = JSONDb(f='db.json')
-        db.find_folders()   # actually copies files
+        db.copy_files()
     except PermissionError:
         sleep_with_feedback('Continuing in %', 5)
 target_root =  source_root
