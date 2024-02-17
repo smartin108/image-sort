@@ -7,6 +7,7 @@ from sys import exit
 from sys import stdout
 import re
 from shutil import copyfile
+from shutil import move
 from collections import namedtuple
 
 file_spec = namedtuple("file_spec", ["source", "dest", "file_size", "file_name", "extension"])
@@ -142,8 +143,19 @@ class JSONDb:
                 print(f'Ignoring dictionary in parameter (not a valid dictionary)')
 
 
+    def backup(self):
+        """make backup(s) of the json db"""
+        for i in [3,2]:
+            try:
+                move(f'{self.filename}.{i-1}', f'{self.filename}.{i}')
+            except FileNotFoundError:
+                pass
+        move(f'{self.filename}', f'{self.filename}.1')
+
+
     def write_file(self):
         """ [re]create a file using the dictionary onboard self """
+        self.backup()
         try:
             with open(self.filename, 'w') as f:
                 payload = json.dumps(self.d)        # .dumps :: Python obj --> json
