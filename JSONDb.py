@@ -229,6 +229,8 @@ class JSONDb:
         files_to_copy = []
         file_types = set()
         total_bytes = 0
+
+        # walk the volume, noting any files that need to be copied
         for p, d, f in os.walk(self.storage_device):
             for file_name in f:
                 candidate_file = os.path.join(p, file_name)
@@ -244,7 +246,9 @@ class JSONDb:
                     else:
                         # print('skipped')
                         pass
+
         if files_to_copy:
+            # copy the files
             print(f'found {len(files_to_copy)} files to copy ({total_bytes} bytes)')
             bytes_moved = 0
             for file in files_to_copy:
@@ -254,6 +258,7 @@ class JSONDb:
                 stdout.flush()
             print('\n')
 
+            # update storage db with last file name per file type
             for extension in file_types:
                 if extension:
                     filtered = [f for f in files_to_copy if f.extension == extension]

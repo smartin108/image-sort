@@ -62,6 +62,7 @@ from time import sleep
 from pprint import pprint
 from math import floor
 from JSONDb import JSONDb
+import re
 
 target_exif_tags = ['xImage DateTime', 'Image Make', 'Image Model', 'EXIF DateTimeOriginal']
 default_root = r'H:/Camera Rips'
@@ -131,10 +132,23 @@ def make_short_date(long_date):
     return f'{std_date.year}-{std_date.month:02}-{std_date.day:02}'
 
 
+def ignore_path(pathname: str):
+    """it's best to ignore some folders:
+        ignore designated folders
+        ignore folders that are likely already processed camera files"""
+    camera_type_path = r'^.*\d{4}-\d{2}-\d{2} \w+ [\w\-]+[ \(raw\)]*$'
+    ignore = False
+    if '.ignore'.lower() in pathname.lower():
+        ignore = True
+    elif re.match(camera_type_path, pathname):
+        ignore = True
+    return ignore
+
+
 # loop through files and read 'em
 skipped = []
 for dirpath, dirnames, filenames in os.walk(source_root):
-    if not '.Ignore' in dirpath:
+    if not ignore_path(dirpath):
         file_count = len(filenames)
         my_count = 0
         my_count_length = len(str(my_count))
