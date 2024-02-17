@@ -113,7 +113,7 @@ class JSONDb:
         try:
             with open(fqpn, 'r') as f:
                 while True:
-                    line = f.readline()
+                    line = f.readline().replace('\n','')
                     if line[0] != '#':
                         return line
         except PermissionError as e:

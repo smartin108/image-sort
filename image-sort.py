@@ -40,7 +40,11 @@ Bugs & Feature Reqs:
 
     *   Designate a folder in source_root that will be ignored. So that you can dump processed files 
             here before offloading them to permanent storage.
-
+    *   Not great: If you're using multiple cards for a camera, you might get recent files from card
+            one that are later than a card two you never got files from. Then the db will point to the 
+            latest file seen, which is on ard one, and never choose to download from the second card.
+            I think the solution is the 'camera-id' file also needs to have an ident for the card itself,
+            and we need to storee that additional key information.
 
 """
 
