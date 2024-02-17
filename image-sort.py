@@ -46,6 +46,9 @@ Bugs & Feature Reqs:
             I think the solution is the 'camera-id' file also needs to have an ident for the card itself,
             and we need to storee that additional key information.
 
+
+feature-20240217: adding a card id to the json storage, cleanups
+
 """
 
 import os
@@ -103,7 +106,7 @@ if requested_root:
 else:
     source_root =  default_root
     try:
-        db = JSONDb(f='db.json', reset=1)
+        db = JSONDb(f='db.json')
         db.find_folders()   # actually copies files
     except PermissionError:
         sleep_with_feedback('Continuing in %', 5)
@@ -138,7 +141,7 @@ for dirpath, dirnames, filenames in os.walk(source_root):
         for filename in filenames:
             file_metadata = {}
             ticker = f'\rreading {my_count}/{file_count}: '
-            status_message = f'{ticker}{shorten(dirpath+filename,100-len(ticker))} ({get_file_extension(filename)})'
+            status_message = f'{ticker}{shorten(dirpath+"/"+filename,100-len(ticker))} ({get_file_extension(filename)})'
             print(f'{status_message}{" "*(119-len(status_message))}', end='')
             stdout.flush()
             source_rel_path = f'{dirpath}\\{filename}'

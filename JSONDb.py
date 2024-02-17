@@ -115,6 +115,7 @@ class JSONDb:
                 while True:
                     line = f.readline().replace('\n','')
                     if line[0] != '#':
+                        print(line)
                         return line
         except PermissionError as e:
             print(f'\nI got PermissionError:\n  i:    {e}\n\n  >:    Is the card inserted?\n  >:    Is it inserted into the correct drive?\n')
@@ -192,6 +193,9 @@ class JSONDb:
 
     def find_folders(self):
         """ enumerate folders that might have the files we want """
+
+        """this method needs to be split up
+        the actual file copy task should probably go up to the main application"""
 
         def check_file(filename):
             """ check a specific file to determine whether it should be moved """

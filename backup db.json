@@ -1,0 +1,72 @@
+{
+    "G0:Panasonic DMC-G85":
+    {
+        "Properties":
+        {
+            "Patterns":
+            {
+                "JPG":
+                {
+                    "Path": "^..DCIM\\\\[0-9]{3}_PANA\\\\P\\d{3}0\\d{3}\\.JPG$",
+                    "Last": "P1660294.JPG"
+                },
+                "RW2":
+                {
+                    "Path": "^..DCIM\\\\[0-9]{3}_PANA\\\\P\\d{3}0\\d{3}\\.RW2$",
+                    "Last": "P1660294.RW2"
+                },
+                "MTS":
+                {
+                    "Path": "^..PRIVATE\\\\AVCHD\\\\BDMV\\\\STREAM\\\\\\d{5}\\.MTS$",
+                    "Last": "0.MTS"
+                }
+            },
+            "Target": "H:\\Camera Rips"
+        }
+    },
+    "G1:Panasonic DMC-G85":
+    {
+        "Properties":
+        {
+            "Patterns":
+            {
+                "JPG":
+                {
+                    "Path": "^..DCIM\\\\[0-9]{3}_PANA\\\\P\\d{3}0\\d{3}\\.JPG$",
+                    "Last": "P1660445.JPG"
+                },
+                "RW2":
+                {
+                    "Path": "^..DCIM\\\\[0-9]{3}_PANA\\\\P\\d{3}0\\d{3}\\.RW2$",
+                    "Last": "P1660445.RW2"
+                },
+                "MTS":
+                {
+                    "Path": "^..PRIVATE\\\\AVCHD\\\\BDMV\\\\STREAM\\\\\\d{5}\\.MTS$",
+                    "Last": "0.MTS"
+                }
+            },
+            "Target": "H:\\Camera Rips"
+        }
+    },
+    "Panasonic Zed-O-Matic":
+    {
+        "Properties":
+        {
+            "Patterns":
+            {
+                "not-yer_JPG":
+                {
+                    "Path": "^..DCIM\\\\[0-9]{3}_PANA\\\\P\\d{3}0\\d{3}.JPG$",
+                    "Last": "P1630518.JPG"
+                },
+                "made_ya_RW2":
+                {
+                    "Path": "^..DCIM\\\\[0-9]{3}_PANA\\\\P\\d{3}0\\d{3}.RW2$",
+                    "Last": "P1630568.RW2"
+                }
+            },
+            "Target": "H:\\Camera Rips"
+        }
+    }
+}
