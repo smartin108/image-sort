@@ -65,7 +65,8 @@ from JSONDb import JSONDb
 import re
 
 target_exif_tags = ['xImage DateTime', 'Image Make', 'Image Model', 'EXIF DateTimeOriginal']
-default_root = r'H:/Camera Rips'
+default_root = 'H:\\Camera Rips'
+
 
 def sleep_with_feedback(message='', sleep_time:float=5.0, trailing_spaces:int=5):
     """display a countdown timer while sleeping"""
@@ -90,7 +91,30 @@ def shorten(message, char_count):
     else:
         return message
 
-print('*** Image Sorter ***\n\n')
+
+def get_file_extension(filename):
+    return filename.split('.')[-1].lower()
+
+
+def make_short_date(long_date):
+    std_date = datetime.datetime.strptime(long_date, '%Y:%m:%d %H:%M:%S')
+    return f'{std_date.year}-{std_date.month:02}-{std_date.day:02}'
+
+
+def ignore_path(pathname: str):
+    """it's best to ignore some folders:
+        ignore designated folders
+        ignore folders that are likely already processed camera files"""
+    camera_type_path = r'^.*\d{4}-\d{2}-\d{2} \w+ [\w\-]+[ \(raw\)]*$'
+    ignore = False
+    if '.ignore' in pathname.lower():
+        ignore = True
+    elif re.match(camera_type_path, pathname):
+        ignore = True
+    return ignore
+
+
+print('\n\n\n                             *** Image Sorter ***\n\n')
 
 image_exif_dict = {}
 try:
@@ -123,32 +147,12 @@ with open(source_root+dummy_filename, 'w') as f:
     f.write('made you look!')
 
 
-def get_file_extension(filename):
-    return filename.split('.')[-1].lower()
-
-
-def make_short_date(long_date):
-    std_date = datetime.datetime.strptime(long_date, '%Y:%m:%d %H:%M:%S')
-    return f'{std_date.year}-{std_date.month:02}-{std_date.day:02}'
-
-
-def ignore_path(pathname: str):
-    """it's best to ignore some folders:
-        ignore designated folders
-        ignore folders that are likely already processed camera files"""
-    camera_type_path = r'^.*\d{4}-\d{2}-\d{2} \w+ [\w\-]+[ \(raw\)]*$'
-    ignore = False
-    if '.ignore'.lower() in pathname.lower():
-        ignore = True
-    elif re.match(camera_type_path, pathname):
-        ignore = True
-    return ignore
-
-
-# loop through files and read 'em
+# loop through files and read EXIF
 skipped = []
 for dirpath, dirnames, filenames in os.walk(source_root):
-    if not ignore_path(dirpath):
+    if ignore_path(dirpath):
+        print(f'\nignoring folder {dirpath} due to ignore rule')
+    else:
         file_count = len(filenames)
         my_count = 0
         my_count_length = len(str(my_count))
@@ -259,4 +263,3 @@ else:
     sleep_with_feedback(r'this window will close automatically in % seconds',1000)
     print('\n')
     sleep_with_feedback(r'this window will close automatically in % seconds',1000)
-# print('\n\ndone.')
