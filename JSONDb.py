@@ -120,6 +120,7 @@ class JSONDb:
     def read_camera_id(self):
         """ read the camera id from the file where we expect it to be """
         fqpn = f'{self.storage_device}{self.id_location}'
+        print(f'fqpn : {fqpn}\nhas it failed here?')
         try:
             with open(fqpn, 'r') as f:
                 while True:
