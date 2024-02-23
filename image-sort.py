@@ -160,7 +160,7 @@ for dirpath, dirnames, filenames in os.walk(source_root):
             file_metadata = {}
             ticker = f'\rreading {my_count}/{file_count}: '
             status_message = f'{ticker}{shorten(dirpath+"/"+filename,100-len(ticker))} ({get_file_extension(filename)})'
-            print(f'{status_message}{" "*(119-len(status_message))}', end='')
+            print(f'{status_message}{" "*(119-len(status_message))}', end='\r', flush=True)
             stdout.flush()
             source_rel_path = f'{dirpath}\\{filename}'
             file_extension = get_file_extension(source_rel_path)
