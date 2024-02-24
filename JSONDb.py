@@ -120,7 +120,6 @@ class JSONDb:
     def read_camera_id(self):
         """ read the camera id from the file where we expect it to be """
         fqpn = f'{self.storage_device}{self.id_location}'
-        print(f'fqpn : {fqpn}\nhas it failed here?')
         try:
             with open(fqpn, 'r') as f:
                 while True:
@@ -129,6 +128,7 @@ class JSONDb:
                         print(line)
                         return line
         except PermissionError as e:
+            print(f'fqpn : {fqpn}\nin JSONDb.py.read_camera_id()\nhas it failed here?')
             print(f'\nI got PermissionError:\n  i:    {e}\n\n  >:    Is the card inserted?\n  >:    Is it inserted into the correct drive?\n')
             raise
 
