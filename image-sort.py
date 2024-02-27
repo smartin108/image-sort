@@ -49,6 +49,13 @@ Bugs & Feature Reqs:
 
 feature-20240217: adding a card id to the json storage, cleanups
 
+    ... which is currently undergoing scope-creep
+
+        but I need to add another thing or two. 
+            after transfer, report out the volume use and capacity,
+            preferably in terms of the semantic scale you defined somewhere
+                lol, today
+
 """
 
 import os
