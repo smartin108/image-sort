@@ -272,7 +272,12 @@ class JSONDb:
     def _copy_file_worker(self):
         # copy the files
         if self.files_to_copy:
-            print(f'found {len(self.files_to_copy)} files to copy ({self.total_bytes_to_copy} bytes)')
+            # actual_len = len(self.files_to_copy)
+            # get log 10 of the length
+            # "round" it to one decimal
+            # convert that to a common power of ten-based semantic label like "20.3 GB (19.7 GiB)" (I'm sure I didn't do that right here)
+            # use the converted semantics in the next print statement:
+            print(f'found {len(self.files_to_copy)} files to copy ({self.total_bytes_to_copy:,} bytes)')
             bytes_moved = 0
             for file in self.files_to_copy:
                 copyfile(file.source, file.dest)
