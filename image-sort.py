@@ -56,6 +56,10 @@ feature-20240217: adding a card id to the json storage, cleanups
             preferably in terms of the semantic scale you defined somewhere
                 lol, today
 
+feature-20240229: Leap Day Edition!
+
+    *   Objective: Add a report showing utilzation of the removable storage
+
 """
 
 import os
@@ -70,6 +74,7 @@ from pprint import pprint
 from math import floor
 from JSONDb import JSONDb
 import re
+import banner
 
 target_exif_tags = ['xImage DateTime', 'Image Make', 'Image Model', 'EXIF DateTimeOriginal']
 default_root = 'H:\\Camera Rips'
@@ -121,7 +126,28 @@ def ignore_path(pathname: str):
     return ignore
 
 
-print('\n\n\n                             *** Image Sorter ***\n\n')
+def get_disk_util(db:JSONDb):
+    remote_storage_device_name = db.get_storage_device()
+    util = shutil.disk_usage(remote_storage_device_name)
+    used_bytes = util.used
+    free_bytes = util.free
+    total_bytes = util.total
+    report = \
+    f"""
+
+Disk Report for {remote_storage_device_name}
+
+            bytes
+    used    {used_bytes:>15,}   ({int(100*used_bytes/total_bytes)}%)
+    free    {free_bytes:>15,}   ({int(100*free_bytes/total_bytes)}%)
+    total   {total_bytes:>15,}
+
+    """
+    return report
+
+
+print(f'\n{banner.banner}\n')
+# print('\n\n\n                             *** Image Sorter ***\n\n')
 
 image_exif_dict = {}
 try:
@@ -139,6 +165,8 @@ else:
     source_root =  default_root
     try:
         db = JSONDb(f='db.json')
+        disk_util_report = get_disk_util(db)
+        print(disk_util_report)
         db.copy_files()
     except PermissionError:
         sleep_with_feedback('Continuing in %', 5)

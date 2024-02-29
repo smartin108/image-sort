@@ -117,6 +117,10 @@ class JSONDb:
         self.setup()
 
 
+    def get_storage_device(self):
+        return self.storage_device
+
+
     def read_camera_id(self):
         """ read the camera id from the file where we expect it to be """
         fqpn = f'{self.storage_device}{self.id_location}'
