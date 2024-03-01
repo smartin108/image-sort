@@ -1,51 +1,6 @@
 """
-This script will examine EXIF data of JPG files in the current directory,
-create a folder for each unique Image DateTime, and move the image to that folder.
 
-For now it's janky: Copy your pictures to ./source and run the script. Processed
-files will be placed in subfolders of ./done by date+camera make+camera model.
-
-Do be careful
-*   Work with copies! 
-*   Images without EXIF cannot be parsed with this. They will simply
-remain behind in the root folder.
-*   non-JPG files will be ignored as well, and remain behind in the root folder
-
-Change Log:
-
-2022 01 29 AH - New
-2022 08 13 AH - New features:
-    *   Now uses ./source folder for source files, ./done for processed files
-    *   Now parses all files and files in subfolders of ./source
-    *   Now reads camera make and model from EXIF data and builds a target folder name with that information
-        *   NOTE this is irrespective of which subfolder the source file was found in
-    *   Better comunication of files that were not processed
-    *   Removes source folders that are empty after reorganizing their contents
-2023 09 28 AH v3.1 - in which we move the data storage to a different drive
-2024 01 14 AH v3.3 - New features:
-    *   now accepts optional root folder to parse as a sys.argv via Windows SendTo
-        *   invoke it from Windows Explorer as a folder action!
-    *   clearer progress feedback
-    *   now puts files with EXIF read errors in a Default Location instead of skipping them
-2024 02 10 AH
-    *   Source now managed in Git repo
-    *   Added JSONDb automated file tracking, fulfilling this feature request:
-        *   Automatically read requested storage device and figure out what needs to be offloaded to 
-            source_root. Journal the devices & files copied so you know where to ontinue on next run.
-            Bonus round: log each file type the camera is capable of separately, e.g., JPG and 
-            whatever video formats it supports.
-
-
-Bugs & Feature Reqs:
-
-    *   Designate a folder in source_root that will be ignored. So that you can dump processed files 
-            here before offloading them to permanent storage.
-    *   Not great: If you're using multiple cards for a camera, you might get recent files from card
-            one that are later than a card two you never got files from. Then the db will point to the 
-            latest file seen, which is on ard one, and never choose to download from the second card.
-            I think the solution is the 'camera-id' file also needs to have an ident for the card itself,
-            and we need to storee that additional key information.
-
+Notes about prior versions were offloaded to a separate file 20220301
 
 feature-20240217: adding a card id to the json storage, cleanups
 
@@ -59,6 +14,8 @@ feature-20240217: adding a card id to the json storage, cleanups
 feature-20240229: Leap Day Edition!
 
     *   Objective: Add a report showing utilzation of the removable storage
+    The CEO was just quoted as saying "this is perfect! Thumbs-up to the 
+    developer!" as he emphatically waved a thumbs-up. 
 
 """
 
@@ -88,8 +45,8 @@ def sleep_with_feedback(message='', sleep_time:float=5.0, trailing_spaces:int=5)
         countdown = floor(sleep_time)
         while countdown > -1e-10:
             regular_message = message.replace('%', str(int(countdown)))
-            sys.stdout.write(f'\r{regular_message}{" "*trailing_spaces}')
-            sys.stdout.flush()
+            stdout.write(f'\r{regular_message}{" "*trailing_spaces}')
+            stdout.flush()
             sleep(0.1)
             countdown -= 0.1
         print('\n')
@@ -195,7 +152,7 @@ for dirpath, dirnames, filenames in os.walk(source_root):
             file_metadata = {}
             ticker = f'\rreading {my_count}/{file_count}: '
             status_message = f'{ticker}{shorten(dirpath+"/"+filename,100-len(ticker))} ({get_file_extension(filename)})'
-            print(f'{status_message}{" "*(119-len(status_message))}', end='\r', flush=True)
+            stdout.write(f'\r{status_message}{" "*(119-len(status_message))}')
             stdout.flush()
             source_rel_path = f'{dirpath}\\{filename}'
             file_extension = get_file_extension(source_rel_path)
@@ -227,6 +184,9 @@ for dirpath, dirnames, filenames in os.walk(source_root):
             my_count += 1
 
 print(f'\n\ndiscovered {len(image_exif_dict)} files with EXIF data')
+
+# this needs to be split up so badly lol
+# #features as commits lol
 
 print(f'\n\nreorganizing files...\n')
 i = 0
@@ -262,7 +222,7 @@ for (source_rel_path, file_metadata) in image_exif_dict.items():
     try:
         target_path = target_folder+file_metadata['filename']
         status_message = f'\rmoving {i}/{len(image_exif_dict.items())}: {shorten(source_rel_path, 80)}'
-        print(f'{status_message}{" "*(119-len(status_message))}', end='')
+        stdout.write(f'\r{status_message}{" "*(119-len(status_message))}')
         stdout.flush()
         shutil.move(source_rel_path, target_path)
     except PermissionError:
@@ -298,3 +258,4 @@ else:
     sleep_with_feedback(r'this window will close automatically in % seconds',1000)
     print('\n')
     sleep_with_feedback(r'this window will close automatically in % seconds',1000)
+
