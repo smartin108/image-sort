@@ -17,6 +17,9 @@ feature-20240229: Leap Day Edition!
     The CEO was just quoted as saying "this is perfect! Thumbs-up to the 
     developer!" as he emphatically waved a thumbs-up. 
 
+feature-20240301: In which we endeavor to eliminate the scolling updates 
+    once and for all!
+
 """
 
 import os
@@ -33,6 +36,7 @@ from JSONDb import JSONDb
 import re
 import banner
 
+global_window_width = 80 # characters; hopefully this is conservative
 target_exif_tags = ['xImage DateTime', 'Image Make', 'Image Model', 'EXIF DateTimeOriginal']
 default_root = 'H:\\Camera Rips'
 
@@ -151,8 +155,8 @@ for dirpath, dirnames, filenames in os.walk(source_root):
         for filename in filenames:
             file_metadata = {}
             ticker = f'\rreading {my_count}/{file_count}: '
-            status_message = f'{ticker}{shorten(dirpath+"/"+filename,100-len(ticker))} ({get_file_extension(filename)})'
-            stdout.write(f'\r{status_message}{" "*(119-len(status_message))}')
+            status_message = f'{ticker}{shorten(dirpath+"/"+filename,(global_window_width-21)-len(ticker))} ({get_file_extension(filename)})'
+            stdout.write(f'\r{status_message}{" "*(global_window_width-len(status_message))}')
             stdout.flush()
             source_rel_path = f'{dirpath}\\{filename}'
             file_extension = get_file_extension(source_rel_path)
@@ -221,8 +225,8 @@ for (source_rel_path, file_metadata) in image_exif_dict.items():
     
     try:
         target_path = target_folder+file_metadata['filename']
-        status_message = f'\rmoving {i}/{len(image_exif_dict.items())}: {shorten(source_rel_path, 80)}'
-        stdout.write(f'\r{status_message}{" "*(119-len(status_message))}')
+        status_message = f'\rmoving {i}/{len(image_exif_dict.items())}: {shorten(source_rel_path, global_window_width-40)}'
+        stdout.write(f'\r{status_message}{" "*(global_window_width-len(status_message))}')
         stdout.flush()
         shutil.move(source_rel_path, target_path)
     except PermissionError:
