@@ -36,7 +36,7 @@ from JSONDb import JSONDb
 import re
 import banner
 
-global_window_width = 80 # characters; hopefully this is conservative
+global_window_width = 100 # characters; hopefully this is conservative
 target_exif_tags = ['xImage DateTime', 'Image Make', 'Image Model', 'EXIF DateTimeOriginal']
 default_root = 'H:\\Camera Rips'
 
@@ -98,7 +98,7 @@ def get_disk_util(db:JSONDb):
 
 Disk Report for {remote_storage_device_name}
 
-            bytes
+            {'bytes':>15}
     used    {used_bytes:>15,}   ({int(100*used_bytes/total_bytes)}%)
     free    {free_bytes:>15,}   ({int(100*free_bytes/total_bytes)}%)
     total   {total_bytes:>15,}
@@ -156,7 +156,10 @@ for dirpath, dirnames, filenames in os.walk(source_root):
             file_metadata = {}
             ticker = f'\rreading {my_count}/{file_count}: '
             status_message = f'{ticker}{shorten(dirpath+"/"+filename,(global_window_width-21)-len(ticker))} ({get_file_extension(filename)})'
-            stdout.write(f'\r{status_message}{" "*(global_window_width-len(status_message))}')
+            spaces = global_window_width-len(status_message)
+            if spaces < 0:
+                spaces = 0
+            stdout.write(f'\r{status_message}{" "*spaces}')
             stdout.flush()
             source_rel_path = f'{dirpath}\\{filename}'
             file_extension = get_file_extension(source_rel_path)
@@ -226,7 +229,10 @@ for (source_rel_path, file_metadata) in image_exif_dict.items():
     try:
         target_path = target_folder+file_metadata['filename']
         status_message = f'\rmoving {i}/{len(image_exif_dict.items())}: {shorten(source_rel_path, global_window_width-40)}'
-        stdout.write(f'\r{status_message}{" "*(global_window_width-len(status_message))}')
+        spaces = global_window_width-len(status_message)
+        if spaces < 0:
+            spaces = 0
+        stdout.write(f'\r{status_message}{" "*spaces}')
         stdout.flush()
         shutil.move(source_rel_path, target_path)
     except PermissionError:
