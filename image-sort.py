@@ -88,19 +88,31 @@ def ignore_path(pathname: str):
 
 
 def get_disk_util(db:JSONDb):
+    proxy_jpg_size = 5839000
+    proxy_raw_size = 19495000
     remote_storage_device_name = db.get_storage_device()
     util = shutil.disk_usage(remote_storage_device_name)
     used_bytes = util.used
     free_bytes = util.free
     total_bytes = util.total
+    percent_used = (100.5*used_bytes)//total_bytes
+    percent_free = (100.5*free_bytes)//total_bytes
+    remaining_jpg = free_bytes // proxy_jpg_size
+    remaining_raw = free_bytes // proxy_raw_size
+    if remaining_jpg < 500:
+        warn = '!!!'
+    elif remaining_jpg < 2000:
+        warn = '!'
+    else:
+        warn = ''
     report = \
     f"""
 
 Disk Report for {remote_storage_device_name}
 
             {'bytes':>15}
-    used    {used_bytes:>15,}   ({int(100*used_bytes/total_bytes)}%)
-    free    {free_bytes:>15,}   ({int(100*free_bytes/total_bytes)}%)
+    used    {used_bytes:>15,}   ({percent_used}%)
+    free    {free_bytes:>15,}   ({percent_free}%)   ({remaining_jpg} jpg / {remaining_raw} raw) {warn}
     total   {total_bytes:>15,}
 
     """
@@ -146,9 +158,10 @@ with open(source_root+dummy_filename, 'w') as f:
 # loop through files and read EXIF
 skipped = []
 for dirpath, dirnames, filenames in os.walk(source_root):
-    if ignore_path(dirpath):
-        print(f'\nignoring folder {dirpath} due to ignore rule')
-    else:
+    # if ignore_path(dirpath):
+    #     print(f'\nignoring folder {dirpath} due to ignore rule')
+    # else:
+    if not ignore_path(dirpath):
         file_count = len(filenames)
         my_count = 0
         my_count_length = len(str(my_count))
@@ -202,21 +215,21 @@ for (source_rel_path, file_metadata) in image_exif_dict.items():
     try:
         folder_date = make_short_date(file_metadata['EXIF DateTimeOriginal'])
     except KeyError as e:
-        folder_date = '!Default Date'
+        folder_date = '!Date'
     try:
         camera_make = file_metadata['Image Make']
     except KeyError as e:
-        camera_make = '!Default Make'
+        camera_make = '!Make'
     try:
         camera_model = file_metadata['Image Model']
     except KeyError as e:
-        camera_model = '!Default Model'
+        camera_model = '!Model'
 
     # I think this is going to fail the next time you hit a folder with raw files
     if file_metadata['raw']:
-        target_folder = f'{target_root}/{folder_date} {camera_make} {camera_model} (raw)/'
+        target_folder = f'{target_root}/{folder_date}{camera_make}{camera_model} (raw)/'
     else:
-        target_folder = f'{target_root}/{folder_date} {camera_make} {camera_model}/'
+        target_folder = f'{target_root}/{folder_date}{camera_make}{camera_model}/'
 
     try:
         os.mkdir(target_folder)
@@ -236,9 +249,9 @@ for (source_rel_path, file_metadata) in image_exif_dict.items():
         stdout.flush()
         shutil.move(source_rel_path, target_path)
     except PermissionError:
-        print(f'\n\n>>>  {source_rel_path} <-- PermissionError ignored during processing. A copy of this file might be in the target folder {target_folder}')
+        print(f'\n\n>>>  {source_rel_path}\n>>>  PermissionError ignored during processing. A copy of this file might be in the target folder\n>>>  {target_folder}')
     except shutil.SameFileError: 
-        print(f'\n\n>>>  {source_rel_path} <-- SameFileError ignored during processing. A copy of this file might be in the target folder {target_folder}')
+        print(f'\n\n>>>  {source_rel_path}\n>>>  SameFileError ignored during processing. A copy of this file might be in the target folder\n>>>  {target_folder}')
 
 
 print('\n')
@@ -264,8 +277,8 @@ print('EOJ')
 
 if requested_root:
     print('\n\ndone. you can safely close this window')
+    sleep_with_feedback(r'this window will close automatically in % seconds',1000)
 else:
-    sleep_with_feedback(r'this window will close automatically in % seconds',1000)
     print('\n')
-    sleep_with_feedback(r'this window will close automatically in % seconds',1000)
+    sleep_with_feedback(r'this window will close automatically in % seconds',5)
 
