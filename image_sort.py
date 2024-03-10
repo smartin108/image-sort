@@ -20,6 +20,9 @@ feature-20240229: Leap Day Edition!
 feature-20240301: In which we endeavor to eliminate the scolling updates 
     once and for all!
 
+BUG:    2024 03 10:     "reading" looks over the entire set of folders on the 
+                        target drive - this is not suppose to happen.
+
 """
 
 import os
