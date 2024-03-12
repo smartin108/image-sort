@@ -21,7 +21,7 @@ feature-20240301: In which we endeavor to eliminate the scolling updates
     once and for all!
 
 BUG:    2024 03 10:     "reading" looks over the entire set of folders on the 
-                        target drive - this is not suppose to happen.
+                        target drive - this is not suppose to happen.\
 
 """
 
@@ -87,6 +87,13 @@ def ignore_path(pathname: str):
         ignore = True
     elif re.match(camera_type_path, pathname):
         ignore = True
+    # if '2024-03' in pathname:
+    #     print (ignore, pathname)
+    #     exit()
+    try:
+        assert ignore == True
+    except AssertionError as e:
+        print(f'{e}\n{pathname}\n{camera_type_path}')
     return ignore
 
 
@@ -164,6 +171,7 @@ for dirpath, dirnames, filenames in os.walk(source_root):
     # if ignore_path(dirpath):
     #     print(f'\nignoring folder {dirpath} due to ignore rule')
     # else:
+    print(f'\n\n{source_root}:{dirpath}:')
     if not ignore_path(dirpath):
         file_count = len(filenames)
         my_count = 0
@@ -230,9 +238,9 @@ for (source_rel_path, file_metadata) in image_exif_dict.items():
 
     # I think this is going to fail the next time you hit a folder with raw files
     if file_metadata['raw']:
-        target_folder = f'{target_root}/{folder_date}{camera_make}{camera_model} (raw)/'
+        target_folder = f'{target_root}/{folder_date} {camera_make} {camera_model} (raw)/'
     else:
-        target_folder = f'{target_root}/{folder_date}{camera_make}{camera_model}/'
+        target_folder = f'{target_root}/{folder_date} {camera_make} {camera_model}/'
 
     try:
         os.mkdir(target_folder)
