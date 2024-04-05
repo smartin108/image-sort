@@ -19,7 +19,8 @@ class JSONDb:
     def __init__(self, **arg):
 
         # storage_device :: Device ID where the removeable media is expected
-        self.storage_device = r'F:'
+        # self.storage_device = r'F:'
+        self.storage_device = r'/run/media/andy/LUMIX/'
         # self.storage_device = r'V:'
 
         # id_location :: file name where the camera's name is expected to be found
