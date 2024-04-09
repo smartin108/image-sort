@@ -18,7 +18,7 @@ class JSONDb:
 
     def __init__(self, **arg):
 
-        # storage_device :: Device ID where the removeable media is expected
+        # storage_device :: Device ID where the removable media is expected
         # self.storage_device = r'F:'
         self.storage_device = r'/run/media/andy/LUMIX/'
         # self.storage_device = r'V:'
@@ -52,43 +52,8 @@ class JSONDb:
         self.total_bytes_to_copy = 0
 
         # d :: the working details. also serves as new file defaults
-        self.d = {
-                    'Panasonic DMC-G85': {
-                        'Properties': {
-                            'Patterns': {
-                                'JPG': {
-                                    'Path': r'^..DCIM\\[0-9]{3}_PANA\\P\d{3}0\d{3}\.JPG$',
-                                    'Last': 'P1630839.JPG'
-                                    },
-                                'RW2': {
-                                    'Path': r'^..DCIM\\[0-9]{3}_PANA\\P\d{3}0\d{3}\.RW2$',
-                                    'Last': 'P1630839.RW2'
-                                    },
-                                'MTS': {
-                                    'Path': r'^..PRIVATE\\AVCHD\\BDMV\\STREAM\\\d{5}\.MTS$',
-                                    'Last': '0.MTS'
-                                    }
-                                },
-                            'Target': 'H:\\Camera Rips'
-                            }
-                        },
-                    'Panasonic Zed-O-Matic': {
-                        'Properties': {
-                            'Patterns': {
-                                'not-yer_JPG': {
-                                    'Path': r'^..DCIM\\[0-9]{3}_PANA\\P\d{3}0\d{3}.JPG$',
-                                    'Last': 'P1630518.JPG'
-                                    },
-                                'made_ya_RW2':{
-                                    'Path': r'^..DCIM\\[0-9]{3}_PANA\\P\d{3}0\d{3}.RW2$',
-                                    'Last': 'P1630568.RW2'
-                                    }
-                                },
-                            'Target': 'H:\\Camera Rips'
-                            }
-                        },
-                    }
-                 #
+        self.d = {}
+
 
         for kwd in ['f', 'file', 'filename']:
             """ scan the parameters for one of the keyword names
@@ -246,21 +211,26 @@ class JSONDb:
         def check_file(filename):
             """ check a specific file to determine whether it should be moved """
             extpart = filename.split('.')[-1]
-            filepart = filename.split('\\')[-1].split('.')[0]
+            filepart = filename.split('/')[-1].split('.')[0]
             result = False, None
+            # print(f'patterns: {patterns}')
             for i in range(len(patterns)):
                 last = patterns[i]["Last"]
                 last_ext = last.split('.')[-1]
                 last_file = last.split('.')[0]
                 if filepart > last_file and extpart == last_ext:
                     return True, extpart
+                # print(f'filename: {filename} | filepart: {filepart} | last_file: {last_file} | extpart: {extpart}')
             return result
 
 
         # walk the path, noting any files that need to be copied
+        print(f'd: {self.d}\n')
         dest_path = self.d[self.camera_id]["Properties"]["Target"]
         patterns = get_patterns()
+        print(f'patterns: {patterns}\n')
         for p, d, f in os.walk(self.storage_device):
+            # print(f'p, d, f: \n{p}\n{d}\n{f}\n')
             for file_name in f:
                 candidate_file = os.path.join(p, file_name)
                 for i in range(len(patterns)):
@@ -272,6 +242,8 @@ class JSONDb:
                             file_size = os.path.getsize(candidate_file)
                             self.total_bytes_to_copy += file_size
                             self.files_to_copy.append(file_spec(candidate_file, dest, file_size, file_name, extension))
+                    # else:
+                    # print(f'patterns[i]["Path"], candidate_file : {patterns[i]["Path"], candidate_file}')
 
 
     def _copy_file_worker(self):
@@ -305,5 +277,6 @@ class JSONDb:
 
     def copy_files(self):
         """friendly interface to find and copy files"""
+        # print('called copy_files\n')
         self._find_files()
         self._copy_file_worker()

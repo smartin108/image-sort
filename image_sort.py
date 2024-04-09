@@ -39,7 +39,7 @@ import banner
 
 global_window_width = 100 # characters; hopefully this is conservative
 target_exif_tags = ['xImage DateTime', 'Image Make', 'Image Model', 'EXIF DateTimeOriginal']
-default_root = 'H:\\Camera Rips'
+default_root = '/home/andy/Pictures/sorted'
 
 
 def sleep_with_feedback(message='', sleep_time:float=5.0, trailing_spaces:int=5):
@@ -152,7 +152,7 @@ print(f'source_root resolves as {source_root}')
 # This intentionally has .jpg extension but no EXIF data. An error is thrown later, which we can handle gracefully.
 # This seems to make the PermissionError go away. #KLUDGE
 dummy_filename = '___ImageSorterTempFile___.jpg' 
-with open(source_root+dummy_filename, 'w') as f:
+with open(source_root+dummy_filename, 'w') as f:    
     f.write('made you look!')
 
 
@@ -172,8 +172,9 @@ for dirpath, dirnames, filenames in os.walk(source_root):
                 spaces = 0
             stdout.write(f'\r{status_message}{" "*spaces}')
             stdout.flush()
-            source_rel_path = f'{dirpath}\\{filename}'
+            source_rel_path = os.path.join(dirpath, filename)
             file_extension = get_file_extension(source_rel_path)
+
             if file_extension in ['jpg','jpeg','heic','rw2']:
                 exif_tags = open(source_rel_path, 'rb')
                 tags = exifread.process_file(exif_tags)
@@ -182,6 +183,7 @@ for dirpath, dirnames, filenames in os.walk(source_root):
                 for i in tags:
                     compile = i, str(tags[i])
                     exif_array.append(compile)
+                    
 
                 file_metadata['filename'] = filename
                 for properties in exif_array:
