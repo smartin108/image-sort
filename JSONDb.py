@@ -101,7 +101,10 @@ class JSONDb:
             print(f'fqpn : {fqpn}\nin JSONDb.py.read_camera_id()\nhas it failed here?')
             print(f'\nI got PermissionError:\n  i:    {e}\n\n  >:    Is the card inserted?\n  >:    Is it inserted into the correct drive?\n')
             raise
-
+        except FileNotFoundError as e:
+            print('FileNotFoundError. Probably the stoprage card is not inserted? (linux version)')
+            print(f'The original error was {e}')
+            raise
 
     def setup(self):
         """ set up particulars for this session:
@@ -225,10 +228,10 @@ class JSONDb:
 
 
         # walk the path, noting any files that need to be copied
-        print(f'd: {self.d}\n')
+        # print(f'd: {self.d}\n')
         dest_path = self.d[self.camera_id]["Properties"]["Target"]
         patterns = get_patterns()
-        print(f'patterns: {patterns}\n')
+        # print(f'patterns: {patterns}\n')
         for p, d, f in os.walk(self.storage_device):
             # print(f'p, d, f: \n{p}\n{d}\n{f}\n')
             for file_name in f:

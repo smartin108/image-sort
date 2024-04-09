@@ -1,0 +1,4 @@
+# this file is used to identify which camera is taking the pictures
+# there must be exactly one uncommented line in this file
+# format as CARD:CAMERA
+G1:Panasonic DMC-G85
